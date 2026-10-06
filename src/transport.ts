@@ -52,11 +52,9 @@ function resolveEndpoint(provided: string | undefined): string {
   if (typeof process === "undefined") {
     return DEFAULT_ENDPOINT;
   }
-  return (
-    process.env?.TELEGRAM_ENDPOINT ??
-    process.env?.SPECTRUM_TELEGRAM_ENDPOINT ??
-    DEFAULT_ENDPOINT
-  );
+  // Only allow the documented SPECTRUM_TELEGRAM_ENDPOINT.
+  // TELEGRAM_ENDPOINT was an undocumented alias; remove to avoid confusion.
+  return process.env?.SPECTRUM_TELEGRAM_ENDPOINT ?? DEFAULT_ENDPOINT;
 }
 
 function parseEndpoint(endpoint: string): {
@@ -67,7 +65,9 @@ function parseEndpoint(endpoint: string): {
     return { target: endpoint.slice("https://".length), isSecure: true };
   }
   if (endpoint.startsWith("http://")) {
+    // Explicit http:// opts out of TLS (dev only)
     return { target: endpoint.slice("http://".length), isSecure: false };
   }
-  return { target: endpoint, isSecure: false };
+  // Default to secure for bare host:port (e.g., "host:443")
+  return { target: endpoint, isSecure: true };
 }
